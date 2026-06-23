@@ -3,7 +3,7 @@ import './App.css'
 
 // Main App component, renders the games and metrics, and runs search algorithms
 export default function App() {
-  const [count, setCount] = useState(0)
+  const defaultPuzzleImage = './assets/default_puzzle.png'
 
   return (
     <>
@@ -98,34 +98,49 @@ function handleReset(game) {
   // Reset the game state
 }
 
-function handleSolve(game, algorithm) {
-  // Run the search algorithm to solve the game
+function handleSolve(game, algorithm, data) {
+  // Run the selected search algorithm on the selected game
+  if (game === 'puzzle') {
+    if (algorithm === 'BFS') {
+      BFS(data)
+    } else if (algorithm === 'Dijkstra') {
+      Dijkstra(data)
+    } else if (algorithm === 'A*') {
+      AStar(data)
+    }
+  } else if (game === 'tictactoe') {
+    if (algorithm === 'Minimax') {
+      Minimax(data)
+    } else if (algorithm === 'Alpha-Beta') {
+      AlphaBeta(data)
+    }
+  }
 }
 
 function handleUploadImage(image) {
-  // Upload an image for the puzzle
+  // Upload an image for the puzzle, resize it to 416x416, and divide it into 8 pieces
 }
 
 function handleRemoveImage() {
   // Remove the uploaded image
 }
 
-function BFS(puzzle) {
+function BFS(data) {
   // Implement BFS algorithm to solve the puzzle
 }
 
-function Dijkstra(puzzle) {
+function Dijkstra(data) {
   // Implement Dijkstra's algorithm to solve the puzzle
 }
 
-function AStar(puzzle) {
+function AStar(data) {
   // Implement A* algorithm to solve the puzzle
 }
 
-function Minimax(tictactoe) {
+function Minimax(data) {
   // Implement Minimax algorithm to solve Tic-Tac-Toe
 }
 
-function AlphaBeta(tictactoe) {
+function AlphaBeta(data) {
   // Implement Alpha-Beta pruning algorithm to solve Tic-Tac-Toe
 }
