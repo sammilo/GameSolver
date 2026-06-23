@@ -12,12 +12,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-@font-face {
-  font-family: titleFont;
-  src: url(./assets/Jersey10-Regular.ttf) format("truetype"); 
-}
-
 .App {
   display: flex;
   flex-direction: column;
@@ -27,20 +21,38 @@
   width: 100vw;
 }
 
+
+@font-face {
+  font-family: titleFont;
+  src: url(./assets/Jersey10-Regular.ttf) format("truetype"); 
+}
+@keyframes colorChange {
+  0% { outline-color: #5f0e0e; }
+  25% { outline-color: #ffc400; }
+  50% { outline-color: #02563C; }
+  75% { outline-color: #2049d1; }
+  100% { outline-color: #560241; }
+}
+
 /* Container for both games */
 .main-container {
   z-index: 1;
-  width: 80vw;
+  width: 90vw;
   height: 80vh;
   margin: auto;
   display: flex;
   flex-direction: row;
-  outline: 2px dashed #ffc400;
+  outline:2px dashed #02563C;
   justify-content: space-around;
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 10px;
   backdrop-filter: blur(3px);
   box-sizing: border-box;
+
+  /* Animation for the outline color change */
+  animation-name: colorChange;
+  animation-duration: 10s;
+  animation-iteration-count: infinite;
 }
 
 /* Page title */
@@ -53,15 +65,16 @@ h1{
 }
 /* Game title */
 h2 {
-  background-color: #012b1e;
+  background-color: #02563C;
   font-family: titleFont;
   color: #ffc400;
-  opacity: 0.9;
+  margin: 56px 0px 56px 0px;
+  opacity: 1;
   outline: 2px dashed #ffc400;
   border-radius: 10px;
   padding: 10px;
   font-size: 2.0em;
-  line-height: 1.1;
+  line-height: 1.0;
   text-align: center;
 }
 /* Metrics title */
@@ -69,31 +82,35 @@ h3 {
   font-family: titleFont;
   color: #ffc400;
   font-size: 1.8em;
-  line-height: 1.1;
-  text-align: center;
-  font-style: italic;
   text-decoration: underline;
-  text-decoration-color: #012b1e;
+  text-decoration-color: #02563C;
   text-decoration-style:dashed;
+  margin: 24px 0px 8px 0px;
 }
 /* Subtitles (selection boxes and metrics text) */
 p {
-  color: #ffffff;
+  font-family: monospace;
+  color: #ffc400;
   font-size: 1.2em;
   font-weight: bolder;
-  line-height: 1.1;
-  text-align: center;
+  line-height: 1.4;
+  margin: 0px 0px 0px 0px;
 }
 
 /* Button styles */
 button {
   background-color: #ffc400;
-  color: #012b1e;
+  color: #01253C;
   font-family: titleFont;
-  font-size: 1.6em;
-  padding: 10px 20px;
+  font-size: 1.2em;
+  padding: 8px 20px 10px 20px;
   border-radius: 10px;
   border: none;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #02563C;
+  color: #ffc400;
 }
   /* Reset button */
 
@@ -103,28 +120,87 @@ button {
 
   /* Remove img button */
 
-/* Selection boxes */
-
 /* Game title, buttons, visualization, and metrics */
 .game-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: baseline;
   height: 40vh;
+  width: 640px;
 }
 /* Buttons, visualization, and selection boxes */
 .visual-btns-container {
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
+  align-items: start;
+  justify-content: space-between;
 }
-.button-group {
+.btn-group {
   display: flex;
   flex-direction: column;
-  align-items: end;
+  align-items: space-between;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
+}
+.metrics-container {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0px 0px 96px;
+}
+.metrics {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Placeholder for the game visualizations */
+.tictactoe-placeholder {
+  width: 416px;
+  height: 416px;
+  background-image: url('./assets/tictactoe_bg.png');
+  border-radius: 4px;
+}
+.puzzle-placeholder {
+  width: 416px;
+  height: 416px;
+  background-image: url('./assets/default_puzzle.png');
+  border-radius: 4px;
+  
+}
+
+/* Selection boxes for algorithms */
+.dropdown-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.dropdown-container {
+  position: relative;
+}
+.dropdown-btn {
+  background-color: #01253C;
+  font-family: monospace; 
+  color: #ffc400;
+  padding: 16px;
+  font-size: 16px;
+}
+.dropdown {
+  z-index: 1;
+  display: none;
+  position: absolute;
+  border: 2px dashed #02563C;
+  border-radius: 10px;
+  background-color: #01253C;
+  min-width: 80px;
+}
+.dropdown-container:hover .dropdown {
+  display: block;
+}
+.dropdown-option {
+  color: #ffc400;
+  text-decoration: none;
+  padding: 12px 16px;
+  display: block;
+}
+.dropdown-option:hover {
+  background-color: #02563C;
+  border-radius: 10px;
 }
