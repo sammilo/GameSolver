@@ -25,8 +25,7 @@
 .containers-wrapper {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-  gap: 160px;
+  justify-content: space-evenly;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -80,6 +79,7 @@ h2 {
   margin: 56px 180px 56px 160px;
   opacity: 1;
   outline: 2px dashed #ffc400;
+  outline-offset: 6px;
   border-radius: 10px;
   padding: 10px;
   font-size: 2.0em;
@@ -93,8 +93,9 @@ h3 {
   font-size: 1.8em;
   text-decoration: underline;
   text-decoration-color: #02563C;
-  text-decoration-style:dashed;
-  margin: 24px 0px 8px 0px;
+  text-decoration-style: dashed;
+  text-align: center;
+  margin: 20px 20px 0px 0px;
 }
 /* Subtitles (selection boxes and metrics text) */
 p {
@@ -103,7 +104,8 @@ p {
   font-size: 1.2em;
   font-weight: bolder;
   line-height: 1.4;
-  margin: 0px 0px 0px 0px;
+  text-align: center;
+  margin: 10px 20px 0px 0px;
 }
 
 /* Button styles */
@@ -126,9 +128,11 @@ button:hover {
 .game-container {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   height: 100%;
   min-width: 840px;
   width: 100%;
+  overflow-y: hidden;
 }
 /* Buttons, visualization, and selection boxes */
 .visual-btns-container {
@@ -147,7 +151,6 @@ button:hover {
 .metrics-container {
   display: flex;
   flex-direction: column;
-  margin: 16px 0px 0px 96px;
 }
 .metrics {
   display: flex;
