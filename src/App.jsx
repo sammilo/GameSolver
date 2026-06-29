@@ -11,14 +11,15 @@ export default function App() {
   const [puzzleMode, setPuzzleMode] = useState("Player")
   const defaultPuzzleData = [[1,2,3],[4,5,6],[7,8,0]]
   const [puzzleData, setPuzzleData] = useState(defaultPuzzleData)
+  const [puzzleMetrics, setPuzzleMetrics] = useState({ moves: 0, visited: 0 })
   const [puzzleImages, setPuzzleImages] = useState(null)
   
   // Use states for tictactoe puzzle
   const [ticTacToeAlgo, setTicTacToeAlgo] = useState("Minimax")
   const [ticTacToeMode, setTicTacToeMode] = useState("PvAI")
   const [ticTacToeData, setTicTacToeData] = useState([[0,0,0],[0,0,0],[0,0,0]])
-  const [puzzleMetrics, setPuzzleMetrics] = useState({ moves: 0, visited: 0 })
-
+  
+  // Display currently selected algorithm and mode for each game
   const [displaySelections, setDisplaySelections] = useState(null)
 
   /* Handle the image upload, image rezising, and imapge update for the 8-puzzle. */
@@ -59,21 +60,21 @@ export default function App() {
   const handleSolveClick = (algo, mode, data) => {
     if (mode === "AI") {
       if (algo === 'BFS') {
-        const result = BFS(data)
+        const result = bfs(data)
         setPuzzleMetrics({ moves: result.moves, visited: result.visitedCount })
         return result
       } else if (algo === 'Dijkstra') {
-        Dijkstra(data)
+        dijkstra(data)
       } else {
-        AStar(data)
+        aStar(data)
       }
     }
     
     if (mode === "PvsAI" || mode === "AIvsAI") {
       if (algo === 'Minimax') {
-        Minimax(mode, data)
+        miniMax(mode, data)
       } else {
-        AlphaBeta(mode, data)
+        alphaBeta(mode, data)
       }
     }
   }
@@ -179,33 +180,43 @@ export default function App() {
   )
 }
 
-/** 8-PUZZLE ALGORITHMS AND HELPERS **/
+/** 8-PUZZLE ALGORITHMS, HELPERS, AND CONSTANTS **/
 const GOAL = [[1,2,3],[4,5,6],[7,8,0]]
-// Structure to store the puzzle state
-class PuzzleState {
-    constructor(board, x, y, level, parent = null, move = null) {
-        this.board = board;
-        this.x = x;
-        this.y = y;
-        this.level = level;
-        this.parent = parent;
-        this.move = move;
-    }
+const GOAL_POSITIONS = {}
+for (let r = 0; r < 3; r++) {
+  for (let c = 0; c < 3; c++) {
+    GOAL_POSITIONS[GOAL[r][c]] = [r, c]
+  }
 }
-
-/* BFS Algorithm */
-function BFS(data) {
-  const startBoard = data.map(row => [...row])
-  const queue = []
-  const visited = new Set()
-  const directions = [
+const DIRECTIONS = [
     { name: 'left', deltaX: 0, deltaY: -1 },
     { name: 'right', deltaX: 0, deltaY: 1 },
     { name: 'up', deltaX: -1, deltaY: 0 },
     { name: 'down', deltaX: 1, deltaY: 0 }
-  ]
+]
 
-  // Identify and save empty tile x(row) and y(col)
+// Structure to store the puzzle state
+class PuzzleState {
+    constructor(board, x, y, level = 0, parent = null, move = null, cost = 0, heuristic = 0) {
+        this.board = board
+        this.x = x
+        this.y = y
+        this.level = level // For BFS
+        this.parent = parent
+        this.move = move
+        this.cost = cost // For Dijkstra and A*, g(n)
+        this.heuristic = heuristic // Manhattan distance, h(n)
+        this.func = cost + heuristic // A* priority, f(n), where f(n) = g(n) + h(n) 
+    }
+}
+
+/* BFS Algorithm */
+function bfs(data) {
+  const startBoard = data.map(row => [...row])
+  const queue = []
+  const visited = new Set()
+
+  // Identify and save blank tile x(row) and y(col)
   let blankX = 0
   let blankY = 0
   for (let r = 0; r < 3; r++) {
@@ -218,7 +229,7 @@ function BFS(data) {
   }
 
   // Add start state to queue and visited
-  queue.push(new PuzzleState(startBoard, blankX, blankY, 0))
+  queue.push(new PuzzleState(startBoard, blankX, blankY))
   visited.add(JSON.stringify(startBoard))
 
   // Check curr state valid moves, swap tiles, save new states, add to queue, add to visited if not found, repeat
@@ -228,11 +239,11 @@ function BFS(data) {
     // If goal state was reached, return solution path and moves
     if (JSON.stringify(curr.board) === JSON.stringify(GOAL)) {
       const path = []
-      let currentNode = curr
+      let currNode = curr
 
-      while (currentNode.parent) {
-        path.push(currentNode.move)
-        currentNode = currentNode.parent
+      while (currNode.parent) {
+        path.push(currNode.move)
+        currNode = currNode.parent
       }
 
       path.reverse()
@@ -246,17 +257,16 @@ function BFS(data) {
     }
 
     // Explore neighbors and generate new valid moves
-    for (const move of directions) {
+    for (const move of DIRECTIONS) {
       const newX = curr.x + move.deltaX
       const newY = curr.y + move.deltaY
 
       if (isMoveValid(newX, newY)) {
-        const newBoard = curr.board.map(row => [...row])
+        const newBoard = curr.board.map(row => [...row]) // Copy board
         [newBoard[curr.x][curr.y], newBoard[newX][newY]] = [newBoard[newX][newY], newBoard[curr.x][curr.y]]
-        const boardKey = JSON.stringify(newBoard)
 
-        if (!visited.has(boardKey)) {
-          visited.add(boardKey)
+        if (!visited.has(JSON.stringify(newBoard))) {
+          visited.add(JSON.stringify(newBoard))
           queue.push(new PuzzleState(newBoard, newX, newY, curr.level + 1, curr, move.name))
         }
       }
@@ -271,29 +281,230 @@ function BFS(data) {
   }
 }
 
+/* Dijkstra's Algorithm */
+function dijkstra(data) {
+  const startBoard = data.map(row => [...row]);
+  const priorityQ = [] // Explore tiles with lower cost first 
+  const distances = new Map() // Cheapest known cost for each state
+
+  // Identify and save blank tile x(row) and y(col)
+  let blankX = 0
+  let blankY = 0
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (startBoard[r][c] === 0) {
+        blankX = r
+        blankY = c
+      }
+    }
+  }
+
+  priorityQ.push(new PuzzleState(startBoard, blankX, blankY))
+  distances.set(JSON.stringify(startBoard), 0)
+
+  while (priorityQ.length > 0) {
+    // Order by lowest-cost state
+    priorityQ.sort((a,b) => a.cost - b.cost);
+
+    const curr = priorityQ.shift()
+    if (curr.cost > distances.get(JSON.stringify(curr.board))) {
+      continue;
+    }
+
+    // If goal state was reached, return solution length and states visited
+    if (JSON.stringify(curr.board) === JSON.stringify(GOAL)) {
+      const path = []
+      let currNode = curr
+      while (currNode.parent) {
+        path.push(currNode.move)
+        currNode = currNode.parent
+      }
+
+      path.reverse()
+
+      return {
+        found: true,
+        moves: path.length,
+        totalCost: curr.cost,
+        solution: path,
+        visitedCount: distances.size
+      }
+    }
+
+    // Explore neighbors and generate valid moves
+    for (const move of DIRECTIONS) {
+      const newX = curr.x + move.deltaX
+      const newY = curr.y + move.deltaY
+
+      if (isMoveValid(newX, newY)) {
+        const newBoard = curr.board.map(row => [...row]) // Copy board
+        [newBoard[curr.x][curr.y], newBoard[newX][newY]] = [newBoard[newX][newY], newBoard[curr.x][curr.y]]
+        
+        const newCost = curr.cost + 1
+
+        // If path is cheaper, update
+        if (!distances.has(JSON.stringify(newBoard)) || newCost < distances.get(JSON.stringify(newBoard))) {
+          distances.set(JSON.stringify(newBoard), newCost)
+          priorityQ.push(new PuzzleState(newBoard, newX, newY, undefined, curr, move.name, newCost))
+        }
+      }
+    }
+  }
+  // Unsolvable puzzle
+  return {
+    found: false,
+    moves: -1,
+    totalCost: -1,
+    solution: [],
+    visitedCount: distances.size
+  }
+}
+
+/* A* Algorithm using Manhattan distance heuristic */
+function aStar(data) {
+  const startBoard = data.map(row => [...row])
+  const priorityQ = [];
+  const distances = new Map()
+
+  // Identify and save blank tile x(row) and y(col)
+  let blankX = 0
+  let blankY = 0
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (startBoard[r][c] === 0) {
+        blankX = r
+        blankY = c
+      }
+    }
+  }
+
+  const startHeuristic = manhattanDistance(startBoard)
+  priorityQ.push(new PuzzleState(startBoard, blankX, blankY, undefined, null, null, 0, startHeuristic))
+  distances.set(JSON.stringify(startBoard), 0)
+
+  while (priorityQ.length > 0) {
+    // Explore states with lowest f(n) first
+    priorityQ.sort((a,b) => a.func - b.func)
+    const curr = priorityQ.shift()
+
+    if (curr.cost > distances.get(JSON.stringify(curr.board))) {
+      continue;
+    }
+
+    // If goal state was reached, return solution length and states visited
+    if (JSON.stringify(curr.board) === JSON.stringify(GOAL)) {
+      const path = []
+      let currNode = curr
+      while (currNode.parent) {
+        path.push(currNode.move)
+        currNode = currNode.parent
+      }
+
+      path.reverse()
+
+      return {
+        found: true,
+        moves: path.length,
+        totalCost: curr.cost,
+        solution: path,
+        visitedCount: distances.size
+      }
+    }
+
+    // Explore neighbors/ valid moves
+    for (const move of DIRECTIONS) {
+      const newX = curr.x + move.deltaX
+      const newY = curr.y + move.deltaY
+
+      if (isMoveValid(newX, newY)) {
+        const newBoard = curr.board.map(row => [...row]) // Copy board
+        [newBoard[curr.x][curr.y], newBoard[newX][newY]] = [newBoard[newX][newY], newBoard[curr.x][curr.y]]
+        
+        const newCost = curr.cost + 1
+
+        if (!distances.has(JSON.stringify(newBoard)) || newCost < distances.get(JSON.stringify(newBoard))) {
+          distances.set(JSON.stringify(newBoard), newCost)
+          const newHeuristic = manhattanDistance(newBoard)
+
+          priorityQ.push(new PuzzleState(newBoard, newX, newY, undefined, curr, move.name, newCost, newHeuristic))
+        }
+      }
+    }
+  }
+  // Unsolvable puzzle
+  return {
+    found: false,
+    moves: -1,
+    totalCost: -1,
+    solution: [],
+    visitedCount: distances.size
+  }
+}
+
 // Check if potential moves are valid (do not exceed matrix/board dimension)
 function isMoveValid(x, y) {
   return x >= 0 && x < 3 && y >= 0 && y < 3
 }
+// Calculate Manhattan distance
+function manhattanDistance(board) {
+  let total = 0;
 
-/* Dijkstra's Algorithm */
-function Dijkstra(data) {
-  // Implement Dijkstra's algorithm to solve the puzzle
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const value = board[r][c]
+
+      if (!(value === 0)) { // Skip empty tile
+        const [goalR, goalC] = GOAL_POSITIONS[value]
+
+        total += Math.abs(r - goalR)
+        total += Math.abs(c - goalC)
+      }
+    }
+  }
+  return total
 }
 
-/* A* Algorithm */
-function AStar(data) {
-  // Implement A* algorithm to solve the puzzle
-}
-
-/** TICTACTOE ALGORITHMS AND HELPERS **/
-
+/** TICTACTOE ALGORITHMS, HELPERS, AND CONSTANTS **/
+const WIN_POSITIONS = [
+  [[0,0],[0,1],[0,2]], // horizontal top
+  [[1,0],[1,1],[1,2]], // horizontal middle
+  [[2,0],[2,1],[2,2]], // horizontal bottom
+  [[0,0],[1,0],[2,0]], // vertical left
+  [[0,1],[1,1],[2,1]], // vertical middle
+  [[0,2],[1,2],[2,2]], // vertical right
+  [[0,0],[1,1],[2,2]], // diagonal neg slope
+  [[2,0],[1,1],[0,2]], // diagonal pos slope
+]
 /* Minimax Algorithm */
-function Minimax(data) {
+function miniMax(data) {
   // Implement Minimax algorithm to solve Tic-Tac-Toe
 }
 
+// Returns true if the same player value is present in any of the 8 win positions
+function evaluationHelper(board, player) {
+  for (let i = 0; i < WIN_POSITIONS.length; i++) {
+    const position = WIN_POSITIONS[i]
+    let hasWon = true;
+
+    for (let j = 0; j < position.length; j++) {
+      const [row, col] = position[j]
+
+      if (board[row][col] !== player) {
+        hasWon = false
+        break;
+      }
+    }
+
+    if (hasWon) {
+      return true
+    }
+  }
+  return false
+}
+
+
+
 /* Alpha-Beta Algorithm */
-function AlphaBeta(data) {
+function alphaBeta(data) {
   // Implement Alpha-Beta pruning algorithm to solve Tic-Tac-Toe
 }
