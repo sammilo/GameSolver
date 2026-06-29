@@ -159,8 +159,8 @@ button:hover {
 
 /* Placeholder for the game visualizations */
 .tictactoe-placeholder {
-  width: 416px;
-  height: 416px;
+  width: 576px;
+  height: 576px;
   background-image: url('./assets/tictactoe_bg.png');
   border-radius: 4px;
 }
