@@ -19,8 +19,8 @@ After solving, several metrics are displayed:
   - Pruning efficiency
 
 ## Architecture
-Backend: JavaScript
-Frontend: CSS, HTML, React
+- Backend: JavaScript
+- Frontend: CSS, HTML, React
 
 ## Algorithms and Comparative Analysis
 
@@ -57,13 +57,11 @@ A* heuristic is admissible (never overestimates the true cost).
 ```
 
 ## Credits
-All code and graphics created by Samantha Milo. 
-Credits to GeeksforGeeks for helping me understand the algorithms and giving me a skeleton for my pseudocode.
-Credits to Copilot for assisting with debugging.
+All code and graphics created by Samantha Milo.
 
 ## References
-Goel, A. (2025a, February 23). 8-Puzzle Problem. GeeksforGeeks. https://www.geeksforgeeks.org/dsa/8-puzzle-problem-using-branch-and-bound/ 
-Goel, A. (2025b, July 23). Finding optimal move in Tic-Tac-Toe using Minimax Algorithm in Game Theory . GeeksforGeeks. https://www.geeksforgeeks.org/dsa/finding-optimal-move-in-tic-tac-toe-using-minimax-algorithm-in-game-theory/ 
+- Goel, A. (2025a, February 23). 8-Puzzle Problem. GeeksforGeeks. https://www.geeksforgeeks.org/dsa/8-puzzle-problem-using-branch-and-bound/ 
+- Goel, A. (2025b, July 23). Finding optimal move in Tic-Tac-Toe using Minimax Algorithm in Game Theory . GeeksforGeeks. https://www.geeksforgeeks.org/dsa/finding-optimal-move-in-tic-tac-toe-using-minimax-algorithm-in-game-theory/ 
 
 ## License
 Copyright [2026] [Samantha Milo]
