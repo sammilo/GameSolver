@@ -445,6 +445,7 @@ function aStar(data) {
 function isMoveValid(x, y) {
   return x >= 0 && x < 3 && y >= 0 && y < 3
 }
+
 // Calculate Manhattan distance
 function manhattanDistance(board) {
   let total = 0;
@@ -464,6 +465,7 @@ function manhattanDistance(board) {
   return total
 }
 
+
 /** TICTACTOE ALGORITHMS, HELPERS, AND CONSTANTS **/
 const WIN_POSITIONS = [
   [[0,0],[0,1],[0,2]], // horizontal top
@@ -475,13 +477,42 @@ const WIN_POSITIONS = [
   [[0,0],[1,1],[2,2]], // diagonal neg slope
   [[2,0],[1,1],[0,2]], // diagonal pos slope
 ]
+
 /* Minimax Algorithm */
-function miniMax(data) {
+function miniMax(board, depth, isMax) {
   // Implement Minimax algorithm to solve Tic-Tac-Toe
+  let score = evaluate(board)
+
+  // Check if maximizer or minimizer won
+  if (score === +10 || score === -10) {
+    return score
+  }
+
+  if (hasMovesLeft(board) === false) {
+    return 0
+  }
+
+  // Maximizer's move
+  if (isMax) {
+
+  }
+  // Minimizer's move
+  else {
+
+  }
+}
+
+function hasMovesLeft(board) {
+  for (let i = 0; i < JSON.stringify(board).length; i++) {
+    if (board[i] === null) {
+      return true
+    }
+  }
+  return false
 }
 
 // Returns true if the same player value is present in any of the 8 win positions
-function evaluationHelper(board, player) {
+function evaluate(board, player) {
   for (let i = 0; i < WIN_POSITIONS.length; i++) {
     const position = WIN_POSITIONS[i]
     let hasWon = true;
@@ -494,12 +525,16 @@ function evaluationHelper(board, player) {
         break;
       }
     }
-
     if (hasWon) {
-      return true
+      if (player === "human") {
+        return +10
+      }
+      else if (player === "ai") {
+        return -10
+      }
     }
   }
-  return false
+  return 0
 }
 
 
