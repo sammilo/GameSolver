@@ -479,7 +479,7 @@ const WIN_POSITIONS = [
 ]
 
 /* Minimax Algorithm */
-function miniMax(board, depth, isMax) {
+function miniMax(board, depth, isMaximizer) {
   // Implement Minimax algorithm to solve Tic-Tac-Toe
   let score = evaluate(board)
 
@@ -493,10 +493,17 @@ function miniMax(board, depth, isMax) {
   }
 
   // Maximizer's move
-  if (isMax) {
+  if (isMaximizer) {
+    let bestScore = -Infinity
 
-  }
-  // Minimizer's move
+    for (let row = 0; i < 3; i++) {
+      for (let col = 0; j < 3; j++) {
+          if (board[row][col] === null) {
+            
+          }
+      }
+    }
+  } 
   else {
 
   }
