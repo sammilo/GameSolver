@@ -57,6 +57,13 @@ export default function App() {
     return croppedImgUrl
   }
 
+  // Shuffle the puzzle pieces and update the puzzleData state
+  // Split the image into 9 tiles and display the shuffled tiles
+  // Make the 0 tile the same color and opacity as the game container
+  const handleShuffleClick = () => {
+
+  }
+
   const handleSolveClick = (algo, mode, data) => {
     if (mode === "AI") {
       if (algo === 'BFS') {
@@ -92,7 +99,7 @@ export default function App() {
             <div className="btn-group">
               <button className="reset-button">◼</button>
               <button className="solve-button" onClick={() => handleSolveClick(puzzleAlgo, puzzleMode, puzzleData)}>▶︎</button>
-              <button className="shuffle-button>" style={{fontWeight: 'bolder'}}>↳↰</button>
+              <button className="shuffle-button>" style={{fontWeight: 'bolder'}} onClick={handleShuffleClick}>↳↰</button>
               <button className="upload-img-button" onClick={() => fileInputRef.current?.click()}>🖿</button>
               <button className="remove-img-button" onClick={() => setPuzzleImage(defaultPuzzleImage)}>✖</button>
             </div>
@@ -477,6 +484,7 @@ const WIN_POSITIONS = [
   [[0,0],[1,1],[2,2]], // diagonal neg slope
   [[2,0],[1,1],[0,2]], // diagonal pos slope
 ]
+const MAXIMIZER = 'x', MINIMIZER = 'o'
 
 /* Minimax Algorithm */
 function miniMax(board, depth, isMaximizer) {
@@ -488,31 +496,71 @@ function miniMax(board, depth, isMaximizer) {
     return score
   }
 
+  // If no winner and no more moves left, it's a draw
   if (hasMovesLeft(board) === false) {
     return 0
   }
 
-  // Maximizer's move
+  // Maximizer's function, try to maximize the score
   if (isMaximizer) {
     let bestScore = -Infinity
 
-    for (let row = 0; i < 3; i++) {
-      for (let col = 0; j < 3; j++) {
-          if (board[row][col] === null) {
-            
-          }
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] === null) { // If cell is empty, evaluate it
+          board[row][col] = MAXIMIZER // Make move
+          bestScore = Math.max(bestScore, miniMax(board, depth + 1, false)) // Set minimizer's turn
+          board[row][col] = null // Undo move
+        }
       }
     }
-  } 
+    return bestScore
+  } // Minimizer's function, try to minimize the score
   else {
+    let bestScore = +Infinity
 
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] === null) { // If cell is empty, evaluate it
+          board[row][col] = MINIMIZER // Make move
+          bestScore = Math.min(bestScore, miniMax(board, depth + 1, true)) // Set maximizer's turn
+          board[row][col] = null // Undo move
+        }
+      }
+    }
+    return bestScore
   }
 }
 
+// Find best move for maximizer
+function findBestMoveMax(board) {
+  let bestVal = -Infinity
+  let bestMove = { row: -1, col: -1 }
+
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      if (board[row][col] === null) { // If cell is empty, evaluate it
+        board[row][col] = MAXIMIZER // Make move
+        let moveVal = miniMax(board, 0, false) // Set minimizer's turn
+        board[row][col] = null // Undo move
+
+        if (moveVal > bestVal) {
+          bestVal = moveVal
+          bestMove = { row, col }
+        }
+      }
+    }
+  }
+  return bestMove
+}
+
+// Check if there are any moves left on the board
 function hasMovesLeft(board) {
-  for (let i = 0; i < JSON.stringify(board).length; i++) {
-    if (board[i] === null) {
-      return true
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      if (board[row][col] === null) {
+        return true
+      }
     }
   }
   return false
@@ -544,9 +592,96 @@ function evaluate(board, player) {
   return 0
 }
 
+/* Alpha-Beta: Minimax with Alpha-Beta Pruning */
+function alphaBeta(board, depth, alpha, beta, isMaximizer) {
+  let score = evaluate(board)
 
+  // Check if maximizer or minimizer won
+  if (score === +10 || score === -10) {
+    return score
+  }
 
-/* Alpha-Beta Algorithm */
-function alphaBeta(data) {
-  // Implement Alpha-Beta pruning algorithm to solve Tic-Tac-Toe
+  // If no winner and no more moves left, it's a draw
+  if (hasMovesLeft(board) === false) {
+    return 0
+  }
+
+  // Maximizer's function, try to maximize the score
+  if (isMaximizer) {
+    let bestScore = -Infinity
+
+    for (let row = 0; row < 3; row++) {
+      shouldBreak = false
+
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] !== null) { // Skip occupied cells
+          continue
+        }
+
+        board[row][col] = MAXIMIZER // Make move
+        bestScore = Math.max(bestScore, alphaBeta(board, depth + 1, alpha, beta, false)) // Set minimizer's turn
+        board[row][col] = null // Undo move
+        alpha = Math.max(alpha, bestScore)
+
+        if (beta <= alpha) {
+          shouldBreak = true
+          break // Beta cut-off
+        }
+      }
+      if (shouldBreak) {
+        break
+      }
+    }
+    return bestScore
+  }
+  // Minimizer's function, try to minimize the score
+  else {
+    let bestScore = +Infinity
+
+    for (let row = 0; row < 3; row++) {
+      shouldBreak = false
+
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] !== null) { // Skip occupied cells
+          continue
+        }
+
+        board[row][col] = MINIMIZER // Make move
+        bestScore = Math.min(bestScore, alphaBeta(board, depth + 1, alpha, beta, true)) // Set maximizer's turn
+        board[row][col] = null // Undo move
+        beta = Math.min(beta, bestScore)
+
+        if (beta <= alpha) {
+          shouldBreak = true
+          break // Alpha cut-off
+        }
+      }
+      if (shouldBreak) {
+        break
+      }
+    }
+    return bestScore
+  }
+}
+
+// Find best move for maximizer with Alpha-Beta pruning
+function findBestMoveAlpha(board) {
+  let bestVal = -Infinity
+  let bestMove = { row: -1, col: -1 }
+
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      if (board[row][col] === null) { // If cell is empty, evaluate it
+        board[row][col] = MAXIMIZER // Make move
+        let moveVal = alphaBeta(board, 0, -Infinity, +Infinity, false) // Set minimizer's turn
+        board[row][col] = null // Undo move
+
+        if (moveVal > bestVal) {
+          bestVal = moveVal
+          bestMove = { row, col }
+        }
+      }
+    }
+  }
+  return bestMove
 }
